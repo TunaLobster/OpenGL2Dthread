@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import QDialog
 # import OpenGLthread
 def trap_exc_during_debug(*args):
     # when app raises uncaught exception, print info
-    print(args)
+    print([repr(arg) for arg in args])
 
 
 # install exception hook: without this, uncaught exception would cause application to exit
@@ -29,12 +29,13 @@ class Worker(QObject):
         super().__init__()
         self.abortval = False
 
-    @pyqtSlot()
+    @pyqtSlot(gl2D)
     def rotate(self, window):
         """
         rotation is the work. Modified from Oliver on stackoverflow
         https://stackoverflow.com/questions/41526832/pyqt5-qthread-signal-not-working-gui-freeze
         """
+        # print(type(window))
         while not self.abortval:
             angle = window.glRotate()
             angle += 1
@@ -146,9 +147,11 @@ class main_window(QDialog):
 
     @pyqtSlot()
     def abort_workers(self):
-        for thread, worker in self.__thread:  # note nice unpacking by Python, avoids indexing
-            thread.terminate()
+        # for thread, worker in self.__thread:  # note nice unpacking by Python, avoids indexing
+        #     thread.terminate()
             # thread.wait()  # <- so you need to wait for it to *actually* quit
+        for thread, worker in self.__thread:
+            thread.exit()
 
     def keyPressEvent(self, e):
         if e.key() == Qt.Key_P:
@@ -160,13 +163,18 @@ class main_window(QDialog):
         self.__thread = []
         worker = Worker()
         thread = QThread()
-        # thread.setObjectName()
         self.__thread.append((thread, worker))
+        # self.__thread.append(thread)
         worker.moveToThread(thread)
+        # print(type(self.glwindow1))
         thread.started.connect(worker.rotate(self.glwindow1))
         thread.start()
+        sleep(2)
+        thread.stop()
+        thread.wait()
 
     def ExitApp(self):
+        # app.processEvents()
         app.exit()
 
 
