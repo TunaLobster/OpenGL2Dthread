@@ -12,7 +12,6 @@ from PyQt5.QtWidgets import QDialog
 
 # import OpenGLthread
 
-
 class main_window(QDialog):
     def __init__(self):
         super(main_window, self).__init__()

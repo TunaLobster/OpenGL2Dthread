@@ -1,4 +1,4 @@
-from fbs_runtime.application_context import ApplicationContext
+# from fbs_runtime.application_context import ApplicationContext
 
 from time import sleep
 
@@ -8,9 +8,9 @@ from OpenGL_2D_class import gl2D, gl2DText, gl2DCircle
 from OpenGL_2D_ui import Ui_Dialog
 from PyQt5.QtCore import QEvent, Qt
 from PyQt5.QtWidgets import QDialog
-# from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QApplication
 
-# import OpenGLthread
+import OpenGLthread
 
 
 class main_window(QDialog):
@@ -128,23 +128,24 @@ class main_window(QDialog):
         app.exit()
 
 
-# if __name__ == "__main__":
-#     app = QApplication.instance()
-#     if not app:
-#         app = QApplication(sys.argv)
-#     app.aboutToQuit.connect(app.deleteLater)
-#     main_win = main_window()
-#     sys.exit(app.exec_())
-
-class AppContext(ApplicationContext):
-    def run(self):
-        # app = QApplication(sys.argv)
-        # app.aboutToQuit.connect(app.deleteLater)
-        app = self.app
-        main_win = main_window()
-        return app.exec_()
-
-
 if __name__ == "__main__":
-    appcontxt = AppContext()
-    sys.exit(appcontxt.run())
+    app = QApplication.instance()
+    if not app:
+        app = QApplication(sys.argv)
+    app.aboutToQuit.connect(app.deleteLater)
+    main_win = main_window()
+    sys.exit(app.exec_())
+
+# Attempt at using fbs to freeze a Qt5 UI
+# class AppContext(ApplicationContext):
+#     def run(self):
+#         # app = QApplication(sys.argv)
+#         # app.aboutToQuit.connect(app.deleteLater)
+#         app = self.app
+#         main_win = main_window()
+#         return app.exec_()
+#
+#
+# if __name__ == "__main__":
+#     appcontxt = AppContext()
+#     sys.exit(appcontxt.run())
