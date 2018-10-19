@@ -6,7 +6,7 @@ from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL_2D_class import gl2D, gl2DText, gl2DCircle
 from OpenGL_2D_ui import Ui_Dialog
-from PyQt5.QtCore import QEvent, Qt, QObject, QThread, pyqtSlot
+from PyQt5.QtCore import QEvent, Qt, QObject, QThread, pyqtSlot, pyqtSignal
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QDialog
 
@@ -48,6 +48,9 @@ class Worker(QObject):
 
 
 class main_window(QDialog):
+
+    sig_abort_workers = pyqtSignal()
+
     def __init__(self):
         super(main_window, self).__init__()
         self.ui = Ui_Dialog()
@@ -147,17 +150,19 @@ class main_window(QDialog):
 
     @pyqtSlot()
     def abort_workers(self):
+        self.sig_abort_workers.emit()
         # for thread, worker in self.__thread:  # note nice unpacking by Python, avoids indexing
         #     thread.terminate()
             # thread.wait()  # <- so you need to wait for it to *actually* quit
         for thread, worker in self.__thread:
-            thread.exit()
+            thread.quit()
+            thread.wait()
 
     def keyPressEvent(self, e):
         if e.key() == Qt.Key_P:
             print('Pressed P')
             self.abort_workers()
-            app.processEvents()
+            # app.processEvents()
 
     def Spinit(self):
         self.__thread = []
@@ -166,6 +171,7 @@ class main_window(QDialog):
         self.__thread.append((thread, worker))
         # self.__thread.append(thread)
         worker.moveToThread(thread)
+        self.sig_abort_workers.connect(worker.abort)
         # print(type(self.glwindow1))
         thread.started.connect(worker.rotate(self.glwindow1))
         thread.start()
