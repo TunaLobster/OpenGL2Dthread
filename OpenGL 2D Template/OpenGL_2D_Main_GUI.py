@@ -25,21 +25,22 @@ class Worker(QObject):
     """
     Must derive from QObject in order to emit signals, connect slots to other signals, and operate in a QThread.
     """
-    def __init__(self):
+    def __init__(self, window):
         super().__init__()
         self.abortval = False
+        self.window = window
 
-    @pyqtSlot(gl2D)
-    def rotate(self, window):
+    @pyqtSlot()
+    def rotate(self):
         """
         rotation is the work. Modified from Oliver on stackoverflow
         https://stackoverflow.com/questions/41526832/pyqt5-qthread-signal-not-working-gui-freeze
         """
         # print(type(window))
         while not self.abortval:
-            angle = window.glRotate()
+            angle = self.window.glRotate()
             angle += 1
-            window.glRotate(angle, 0.5, 0.5)
+            self.window.glRotate(angle, 0.5, 0.5)
             app.processEvents()
             sleep(0.03)
 
@@ -168,18 +169,18 @@ class main_window(QDialog):
 
     def Spinit(self):
         self.__thread = []
-        worker = Worker()
+        worker = Worker(self.glwindow1)
         thread = QThread()
         self.__thread.append((thread, worker))
         # self.__thread.append(thread)
         worker.moveToThread(thread)
         self.sig_abort_workers.connect(worker.abort)
         # print(type(self.glwindow1))
-        thread.started.connect(worker.rotate,self.glwindow1)
+        thread.started.connect(worker.rotate)
         thread.start()
-        sleep(2)
-        thread.stop()
-        thread.wait()
+        # sleep(2)
+        # thread.stop()
+        # thread.wait()
 
     def ExitApp(self):
         # app.processEvents()
