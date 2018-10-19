@@ -18,7 +18,7 @@ def trap_exc_during_debug(*args):
 
 
 # install exception hook: without this, uncaught exception would cause application to exit
-sys.excepthook = trap_exc_during_debug
+# sys.excepthook = trap_exc_during_debug
 
 
 class Worker(QObject):
@@ -45,6 +45,7 @@ class Worker(QObject):
 
     def abort(self):
         self.abortval = True
+        # quit()
 
 
 class main_window(QDialog):
@@ -156,6 +157,7 @@ class main_window(QDialog):
             # thread.wait()  # <- so you need to wait for it to *actually* quit
         for thread, worker in self.__thread:
             thread.quit()
+            # worker.abort()
             thread.wait()
 
     def keyPressEvent(self, e):
@@ -173,7 +175,7 @@ class main_window(QDialog):
         worker.moveToThread(thread)
         self.sig_abort_workers.connect(worker.abort)
         # print(type(self.glwindow1))
-        thread.started.connect(worker.rotate(self.glwindow1))
+        thread.started.connect(worker.rotate,self.glwindow1)
         thread.start()
         sleep(2)
         thread.stop()
