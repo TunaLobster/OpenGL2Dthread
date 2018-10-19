@@ -12,12 +12,12 @@ from PyQt5.QtWidgets import QDialog
 
 
 # import OpenGLthread
-def trap_exc_during_debug(*args):
-    # when app raises uncaught exception, print info
-    print([repr(arg) for arg in args])
-
-
-# install exception hook: without this, uncaught exception would cause application to exit
+# def trap_exc_during_debug(*args):
+#     # when app raises uncaught exception, print info
+#     print([repr(arg) for arg in args])
+#
+#
+# # install exception hook: without this, uncaught exception would cause application to exit
 # sys.excepthook = trap_exc_during_debug
 
 
@@ -164,23 +164,27 @@ class main_window(QDialog):
     def keyPressEvent(self, e):
         if e.key() == Qt.Key_P:
             print('Pressed P')
-            self.abort_workers()
+            self.Spinit()
             # app.processEvents()
 
     def Spinit(self):
-        self.__thread = []
-        worker = Worker(self.glwindow1)
-        thread = QThread()
-        self.__thread.append((thread, worker))
-        # self.__thread.append(thread)
-        worker.moveToThread(thread)
-        self.sig_abort_workers.connect(worker.abort)
-        # print(type(self.glwindow1))
-        thread.started.connect(worker.rotate)
-        thread.start()
-        # sleep(2)
-        # thread.stop()
-        # thread.wait()
+        if self.__thread is None:
+            self.__thread = []
+            worker = Worker(self.glwindow1)
+            thread = QThread()
+            self.__thread.append((thread, worker))
+            # self.__thread.append(thread)
+            worker.moveToThread(thread)
+            self.sig_abort_workers.connect(worker.abort)
+            # print(type(self.glwindow1))
+            thread.started.connect(worker.rotate)
+            thread.start()
+            # sleep(2)
+            # thread.stop()
+            # thread.wait()
+        else:
+            self.abort_workers()
+            self.__thread = None
 
     def ExitApp(self):
         # app.processEvents()
