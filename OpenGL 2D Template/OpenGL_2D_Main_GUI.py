@@ -6,11 +6,44 @@ from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL_2D_class import gl2D, gl2DText, gl2DCircle
 from OpenGL_2D_ui import Ui_Dialog
-from PyQt5.QtCore import QEvent, Qt
-from PyQt5.QtWidgets import QDialog
+from PyQt5.QtCore import QEvent, Qt, QObject, QThread, pyqtSlot
 from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QDialog
 
-import OpenGLthread
+
+# import OpenGLthread
+def trap_exc_during_debug(*args):
+    # when app raises uncaught exception, print info
+    print(args)
+
+
+# install exception hook: without this, uncaught exception would cause application to exit
+sys.excepthook = trap_exc_during_debug
+
+
+class Worker(QObject):
+    """
+    Must derive from QObject in order to emit signals, connect slots to other signals, and operate in a QThread.
+    """
+    def __init__(self):
+        super().__init__()
+        self.abortval = False
+
+    @pyqtSlot()
+    def rotate(self, window):
+        """
+        rotation is the work. Modified from Oliver on stackoverflow
+        https://stackoverflow.com/questions/41526832/pyqt5-qthread-signal-not-working-gui-freeze
+        """
+        while not self.abortval:
+            angle = window.glRotate()
+            angle += 1
+            window.glRotate(angle, 0.5, 0.5)
+            app.processEvents()
+            sleep(0.03)
+
+    def abort(self):
+        self.abortval = True
 
 
 class main_window(QDialog):
@@ -31,6 +64,7 @@ class main_window(QDialog):
 
         self.glwindow1 = gl2D(self.ui.openGLWidget, self.Drawit,
                               xmin=0, xmax=1, ymin=0, ymax=2)
+        self.__thread = None
         # ************************************************************************
 
         # define any additional data your program might need
@@ -52,7 +86,7 @@ class main_window(QDialog):
         self.ui.openGLWidget.setMouseTracking(True)  # to read the mouse location
 
     def eventFilter(self, source, event):  # handle events that can't be CONNECTED
-        if (event.type() == QEvent.MouseMove):  # to read the mouse location
+        if event.type() == QEvent.MouseMove:  # to read the mouse location
             pos = event.pos()
             x, y = self.glwindow1.UnProjectMouse(pos.x(), pos.y())
             self.ui.MouseLocation.setText("{:.1f}".format(x) + ", {:.1f}".format(y))
@@ -109,20 +143,28 @@ class main_window(QDialog):
             gl2DText('House', 0.2, 0.5)
 
     # end render scene
+
+    @pyqtSlot()
+    def abort_workers(self):
+        for thread, worker in self.__thread:  # note nice unpacking by Python, avoids indexing
+            thread.terminate()
+            # thread.wait()  # <- so you need to wait for it to *actually* quit
+
     def keyPressEvent(self, e):
         if e.key() == Qt.Key_P:
-            OpenGLthread.pause()
+            print('Pressed P')
+            self.abort_workers()
+            app.processEvents()
 
     def Spinit(self):
-        # simple animation - by rotating the image
-        # about the center of the circle
-        for i in range(120):
-            angle = self.glwindow1.glRotate()
-            angle += 3
-            self.glwindow1.glRotate(angle, 0.5, 0.5)
-            app.processEvents()
-            sleep(0.03)
-        # OpenGLthread.spinit(self.glwindow1, app)
+        self.__thread = []
+        worker = Worker()
+        thread = QThread()
+        # thread.setObjectName()
+        self.__thread.append((thread, worker))
+        worker.moveToThread(thread)
+        thread.started.connect(worker.rotate(self.glwindow1))
+        thread.start()
 
     def ExitApp(self):
         app.exit()
@@ -136,7 +178,6 @@ if __name__ == "__main__":
     main_win = main_window()
     sys.exit(app.exec_())
 
-# Attempt at using fbs to freeze a Qt5 UI
 # class AppContext(ApplicationContext):
 #     def run(self):
 #         # app = QApplication(sys.argv)

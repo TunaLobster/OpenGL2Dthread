@@ -23,9 +23,49 @@ def spinit(glwindow, app):
             continue
 
 
-def pause():
-    global pauseVal
-    pauseVal = not pauseVal
+# class Worker(QObject):
+#     """
+#     Must derive from QObject in order to emit signals, connect slots to other signals, and operate in a QThread.
+#     """
+#
+#     sig_step = pyqtSignal(int, str)  # worker id, step description: emitted every step through work() loop
+#     sig_done = pyqtSignal(int)  # worker id: emitted at end of work()
+#     sig_msg = pyqtSignal(str)  # message to be shown to user
+#
+#     def __init__(self, id: int):
+#         super().__init__()
+#         self.__id = id
+#         self.__abort = False
+#
+#     @pyqtSlot()
+#     def work(self):
+#         """
+#         Pretend this worker method does work that takes a long time. During this time, the thread's
+#         event loop is blocked, except if the application's processEvents() is called: this gives every
+#         thread (incl. main) a chance to process events, which in this sample means processing signals
+#         received from GUI (such as abort).
+#         """
+#         thread_name = QThread.currentThread().objectName()
+#         thread_id = int(QThread.currentThreadId())  # cast to int() is necessary
+#         self.sig_msg.emit('Running worker #{} from thread "{}" (#{})'.format(self.__id, thread_name, thread_id))
+#
+#         for step in range(100):
+#             time.sleep(0.1)
+#             self.sig_step.emit(self.__id, 'step ' + str(step))
+#
+#             # check if we need to abort the loop; need to process events to receive signals;
+#             app.processEvents()  # this could cause change to self.__abort
+#             if self.__abort:
+#                 # note that "step" value will not necessarily be same for every thread
+#                 self.sig_msg.emit('Worker #{} aborting work at step {}'.format(self.__id, step))
+#                 break
+#
+#
+#         self.sig_done.emit(self.__id)
+#
+#     def abort(self):
+#         self.sig_msg.emit('Worker #{} notified to abort'.format(self.__id))
+#         self.__abort = True
 
 
 # !/usr/bin/python3
